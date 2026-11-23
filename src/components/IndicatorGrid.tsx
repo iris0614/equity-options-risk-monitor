@@ -48,13 +48,15 @@ export function IndicatorGrid({ score, onChange }: Props) {
           return (
             <div
               key={dimId}
-              className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-4"
+              className="rounded-lg border border-slate-200 bg-white p-4"
             >
-              <div className="mb-1">
-                <h3 className="text-sm font-semibold text-navy">
+              <div className="mb-1.5">
+                <h3 className="text-sm font-semibold leading-snug text-navy">
                   {labels.zh}
                 </h3>
-                <p className="text-[11px] text-slate-400">{labels.subtitle}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-slate-400">
+                  {labels.subtitle}
+                </p>
               </div>
               <div>
                 {dim.indicators.map((ind) => (

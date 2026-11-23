@@ -33,9 +33,9 @@ export function IndicatorCard({ evalItem, onChange }: Props) {
   const value = evalItem.value;
 
   return (
-    <div className="border-t border-slate-100 py-3 first:border-t-0 first:pt-0 last:pb-0">
+    <div className="border-t border-slate-100 py-2.5 first:border-t-0 first:pt-1.5 last:pb-0">
       {/* Top: label block | value + badge — vertically centered */}
-      <div className="mb-2 flex items-center justify-between gap-3">
+      <div className="mb-1.5 flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span
