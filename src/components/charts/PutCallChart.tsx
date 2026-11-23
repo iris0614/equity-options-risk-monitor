@@ -52,23 +52,39 @@ export function PutCallChart({ snap, thresholds: _thresholds, asOf: _asOf }: Pro
   const badge = flowBadge(equity, total, index);
 
   const option = {
+    color: ['#64748B', '#FECACA'],
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       valueFormatter: (v: number) => Number(v).toFixed(2),
     },
     legend: {
-      data: ['当前数值', '红线阈值'],
+      data: [
+        { name: '当前数值', itemStyle: { color: '#64748B' } },
+        {
+          name: '红线阈值',
+          itemStyle: {
+            color: 'rgba(254, 226, 226, 0.55)',
+            borderColor: '#EF4444',
+            borderWidth: 1.5,
+          },
+        },
+      ],
       bottom: 0,
       textStyle: { fontSize: 11, color: '#3D4F66' },
       itemWidth: 12,
       itemHeight: 12,
     },
-    grid: { left: 40, right: 12, top: 12, bottom: 48 },
+    grid: { left: 40, right: 12, top: 12, bottom: 52 },
     xAxis: {
       type: 'category',
       data: ['个股 P/C（灰线）', '全市场 P/C（橙线）', '指数 P/C（蓝线）'],
-      axisLabel: { fontSize: 11, color: '#3D4F66' },
+      axisLabel: {
+        fontSize: 10,
+        color: '#3D4F66',
+        interval: 0,
+        hideOverlap: false,
+      },
       axisTick: { show: false },
       axisLine: { lineStyle: { color: '#D8DEE8' } },
     },
@@ -86,6 +102,7 @@ export function PutCallChart({ snap, thresholds: _thresholds, asOf: _asOf }: Pro
         type: 'bar',
         barWidth: 22,
         barGap: '30%',
+        itemStyle: { color: '#64748B', borderRadius: [4, 4, 0, 0] },
         data: current.map((v, i) => ({
           value: v,
           itemStyle: {
@@ -98,15 +115,13 @@ export function PutCallChart({ snap, thresholds: _thresholds, asOf: _asOf }: Pro
         name: '红线阈值',
         type: 'bar',
         barWidth: 22,
-        data: RED_LINES.map((v) => ({
-          value: v,
-          itemStyle: {
-            color: 'rgba(254, 226, 226, 0.55)',
-            borderColor: '#EF4444',
-            borderWidth: 1.5,
-            borderRadius: [4, 4, 0, 0],
-          },
-        })),
+        itemStyle: {
+          color: 'rgba(254, 226, 226, 0.55)',
+          borderColor: '#EF4444',
+          borderWidth: 1.5,
+          borderRadius: [4, 4, 0, 0],
+        },
+        data: [...RED_LINES],
       },
     ],
   };
