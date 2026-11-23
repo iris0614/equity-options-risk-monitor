@@ -52,6 +52,7 @@ export default function App() {
             series={api.series}
             asOf={api.asOf}
             vixTrigger={api.thresholds.vix.triggered}
+            stageId={model.stages.primary}
           />
           <PutCallChart
             snap={api.indicators}

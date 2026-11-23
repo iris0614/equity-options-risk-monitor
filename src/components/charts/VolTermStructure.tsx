@@ -1,5 +1,9 @@
 import ReactECharts from 'echarts-for-react';
-import type { IndicatorSnapshot, MarketSeriesPoint } from '../../types';
+import type {
+  IndicatorSnapshot,
+  MarketSeriesPoint,
+  StageId,
+} from '../../types';
 import { VANNA_VIX_LINE } from '../../config/indicators';
 import { formatNum } from '../../utils/format';
 
@@ -8,9 +12,21 @@ interface Props {
   series: MarketSeriesPoint[];
   asOf: string;
   vixTrigger: number;
+  /** Active risk stage — curve is red only in stage 3; else green. */
+  stageId: StageId | null;
 }
 
-export function VolTermStructure({ snap, series: _series, vixTrigger }: Props) {
+const GREEN = '#1A7F37';
+const GREEN_AREA = 'rgba(26, 127, 55, 0.10)';
+const RED = '#DC2626';
+const RED_AREA = 'rgba(220, 38, 38, 0.08)';
+
+export function VolTermStructure({
+  snap,
+  series: _series,
+  vixTrigger,
+  stageId,
+}: Props) {
   void _series;
   const threshold = vixTrigger || VANNA_VIX_LINE;
 
@@ -28,8 +44,13 @@ export function VolTermStructure({ snap, series: _series, vixTrigger }: Props) {
     (snap.vixVxv.value !== null && snap.vixVxv.value > 1) ||
     (snap.vix9dVix.value !== null && snap.vix9dVix.value > 1);
 
+  // Stage 3 → red; stages 1 / 2 / 4 → green
+  const stress = stageId === '03';
+  const curve = stress ? RED : GREEN;
+  const area = stress ? RED_AREA : GREEN_AREA;
+
   const option = {
-    color: ['#DC2626', '#94A3B8'],
+    color: [curve, '#94A3B8'],
     tooltip: {
       trigger: 'axis',
       valueFormatter: (v: number | null) =>
@@ -37,7 +58,7 @@ export function VolTermStructure({ snap, series: _series, vixTrigger }: Props) {
     },
     legend: {
       data: [
-        { name: '当前期限结构', itemStyle: { color: '#DC2626' } },
+        { name: '当前期限结构', itemStyle: { color: curve } },
         {
           name: `Vanna 触发阈值 (${threshold.toFixed(1)})`,
           itemStyle: { color: '#94A3B8' },
@@ -78,13 +99,13 @@ export function VolTermStructure({ snap, series: _series, vixTrigger }: Props) {
         symbol: 'circle',
         symbolSize: 10,
         showSymbol: true,
-        lineStyle: { width: 3, color: '#DC2626' },
+        lineStyle: { width: 3, color: curve },
         itemStyle: {
           color: '#FFFFFF',
-          borderColor: '#DC2626',
+          borderColor: curve,
           borderWidth: 2,
         },
-        areaStyle: { color: 'rgba(220, 38, 38, 0.08)' },
+        areaStyle: { color: area },
         z: 3,
       },
       {
