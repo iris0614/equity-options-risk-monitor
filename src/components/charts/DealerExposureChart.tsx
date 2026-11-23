@@ -84,8 +84,24 @@ function ZeroGauge({
         </span>
       </div>
 
-      <div className="relative h-3.5 overflow-hidden rounded-sm bg-slate-100">
-        {/* value → zero fill */}
+      <div className="relative h-3.5 overflow-hidden rounded-sm">
+        {/* zero-axis zone wash: left red / right green */}
+        <div
+          className="absolute inset-y-0 left-0"
+          style={{
+            width: `${zeroPct}%`,
+            background: '#F9F3F4',
+          }}
+        />
+        <div
+          className="absolute inset-y-0"
+          style={{
+            left: `${zeroPct}%`,
+            width: `${100 - zeroPct}%`,
+            background: '#F0F9F7',
+          }}
+        />
+        {/* value → zero fill (left of zero = red, right = green) */}
         {valPct !== null && fillWidth > 0 && (
           <div
             className="absolute top-0 h-full"
