@@ -80,11 +80,7 @@ export default function App() {
           onToggleRep={api.toggleManualRep}
         />
 
-        <ScoreTrace
-          score={model.score}
-          weights={api.weights}
-          onWeight={api.updateWeight}
-        />
+        <ScoreTrace score={model.score} weights={api.weights} />
 
         <ConfigPanel
           thresholds={api.thresholds}

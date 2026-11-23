@@ -1,23 +1,22 @@
 import type { IndicatorId, ThresholdBand } from '../types';
 
-/** Default research thresholds (scenario baseline, not live market). */
+/**
+ * Display thresholds for config UI. Live status uses original evalStatus rules
+ * in engine/status.ts (some are multi-condition / inverted).
+ */
 export const DEFAULT_THRESHOLDS: Record<IndicatorId, ThresholdBand> = {
-  vixeqVix: { warning: 1.4, triggered: 1.6 },
-  dspx: { warning: 32, triggered: 40 },
-  nvdaProxy: { warning: 130, triggered: 145 },
-  vix: { warning: 22, triggered: 28 },
-  vvix: { warning: 105, triggered: 120 },
-  vixVxv: { warning: 0.98, triggered: 1.02 },
-  vix9dVix: { warning: 0.98, triggered: 1.02 },
-  skew: { warning: 135, triggered: 145 },
-  equityPc: { warning: 0.7, triggered: 0.85 },
-  totalPc: { warning: 0.95, triggered: 1.15 },
-  indexPc: { warning: 1.05, triggered: 1.25 },
-  /** Lower (more negative) is worse */
-  gex: { warning: -40, triggered: -80, inverted: true },
-  dealerGamma: { warning: -4, triggered: -7, inverted: true },
-  netDeltaFlow: { warning: -40, triggered: -90, inverted: true },
-  /** -1 is worse (sell-on-vol-up); treat as inverted numeric */
-  vannaSign: { warning: 0, triggered: -1, inverted: true },
-  charmFlow: { warning: -20, triggered: -40, inverted: true },
+  vixeqVix: { warning: 2.15, triggered: 1.85, inverted: true },
+  dspx: { warning: 39, triggered: 35, inverted: true },
+  nvdaProxy: { warning: 160, triggered: 148, inverted: true },
+  vix: { warning: 20, triggered: 28 },
+  vvix: { warning: 100, triggered: 115 },
+  vixVxv: { warning: 0.95, triggered: 1.0 },
+  vix9dVix: { warning: 0.95, triggered: 1.0 },
+  skew: { warning: 160, triggered: 150 },
+  equityPc: { warning: 0.68, triggered: 0.8 },
+  totalPc: { warning: 1.0, triggered: 1.25 },
+  indexPc: { warning: 1.12, triggered: 1.25 },
+  gex: { warning: 0, triggered: -50, inverted: true },
+  dealerGamma: { warning: 0, triggered: -5, inverted: true },
+  netDeltaFlow: { warning: 0, triggered: -60, inverted: true },
 };

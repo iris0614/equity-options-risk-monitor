@@ -1,47 +1,41 @@
 import type { TransmissionLink } from '../types';
 
+/** Original 6-node negative-feedback chain. */
 export const TRANSMISSION_LINKS: TransmissionLink[] = [
   {
-    id: 'dispersion',
-    label: 'Dispersion Stress',
-    labelZh: '离散度抬升',
-    description: 'Single-stock vol / correlation stress feeds index hedge demand',
+    id: 'correlation',
+    label: 'Correlation Rise',
+    labelZh: '相关性抬升',
+    description: '离散压缩 → 相关性抬升',
   },
   {
-    id: 'volSpike',
-    label: 'Vol Spike',
-    labelZh: '波动跳升',
-    description: 'VIX / VVIX expansion raises hedging urgency',
+    id: 'dispersionUnwind',
+    label: 'Dispersion Unwind',
+    labelZh: '离散交易亏损平仓',
+    description: '离散交易亏损平仓',
   },
   {
-    id: 'liquidity',
-    label: 'Liquidity Drain',
-    labelZh: '流动性抽离',
-    description: 'Wider spreads / thinner depth amplify flow impact',
+    id: 'gammaSqueeze',
+    label: 'Neg Gamma / Delta Squeeze',
+    labelZh: '机械买盘消失 & 负Gamma/负Delta挤压',
+    description: '正 Gamma 阻尼消失，负敞口挤压',
   },
   {
-    id: 'gammaFlip',
-    label: 'Gamma Flip',
-    labelZh: 'Gamma 翻转',
-    description: 'Dealers flip short gamma → amplify spot moves',
+    id: 'volTerm',
+    label: 'Vol Spike & Backwardation',
+    labelZh: 'VIX/VVIX跳升 & 期限倒挂',
+    description: 'VIX/VVIX 跳升与期限倒挂',
   },
   {
     id: 'vanna',
     label: 'Vanna Trigger',
-    labelZh: 'Vanna 触发',
-    description:
-      'Vol-driven delta rebalance. Direction depends on vannaSign — not assumed sell-on-vol↑',
-  },
-  {
-    id: 'deltaHedge',
-    label: 'Delta Hedge Flow',
-    labelZh: 'Delta 对冲流',
-    description: 'Mechanical delta hedging transmits into spot',
+    labelZh: 'Vanna触发',
+    description: 'Vanna 触发（方向取决于头寸，非默认 vol↑=卖压）',
   },
   {
     id: 'cascade',
-    label: 'Liquidation Cascade',
-    labelZh: '机械加速抛售',
-    description: 'Self-reinforcing sell / de-lever loop under thin liquidity',
+    label: 'Mechanical Sell Accelerator',
+    labelZh: '机械式砸盘加速器',
+    description: '机械式砸盘加速',
   },
 ];

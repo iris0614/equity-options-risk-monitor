@@ -33,13 +33,21 @@ export function useRiskMonitor() {
   const [indicators, setIndicators] = useState<IndicatorSnapshot>(() =>
     snapshotFromScenario('baseline'),
   );
-  const [weights, setWeights] = useState<DimensionWeights>({ ...DEFAULT_WEIGHTS });
-  const [thresholds, setThresholds] = useState<Record<IndicatorId, ThresholdBand>>(
-    () => structuredClone(DEFAULT_THRESHOLDS),
+  const [weights, setWeights] = useState<DimensionWeights>({
+    ...DEFAULT_WEIGHTS,
+  });
+  const [thresholds, setThresholds] = useState<
+    Record<IndicatorId, ThresholdBand>
+  >(() => structuredClone(DEFAULT_THRESHOLDS));
+  const [manualEsc, setManualEsc] = useState<Record<string, boolean>>(
+    emptyManual,
   );
-  const [manualEsc, setManualEsc] = useState<Record<string, boolean>>(emptyManual);
-  const [manualRep, setManualRep] = useState<Record<string, boolean>>(emptyManual);
-  const [snapshots, setSnapshots] = useState<SnapshotRecord[]>(() => loadSnapshots());
+  const [manualRep, setManualRep] = useState<Record<string, boolean>>(
+    emptyManual,
+  );
+  const [snapshots, setSnapshots] = useState<SnapshotRecord[]>(() =>
+    loadSnapshots(),
+  );
   const [customMode, setCustomMode] = useState(false);
 
   const asOf = SCENARIO_BY_ID[scenarioId]?.asOf ?? indicators.vix?.asOf ?? '';
@@ -73,14 +81,20 @@ export function useRiskMonitor() {
     setThresholds(structuredClone(DEFAULT_THRESHOLDS));
   }, [applyScenario]);
 
-  const updateIndicator = useCallback((id: IndicatorId, value: number | null) => {
-    setIndicators((prev) => setIndicatorValue(prev, id, value));
-    setCustomMode(true);
-  }, []);
+  const updateIndicator = useCallback(
+    (id: IndicatorId, value: number | null) => {
+      setIndicators((prev) => setIndicatorValue(prev, id, value));
+      setCustomMode(true);
+    },
+    [],
+  );
 
-  const updateWeight = useCallback((key: keyof DimensionWeights, value: number) => {
-    setWeights((w) => ({ ...w, [key]: value }));
-  }, []);
+  const updateWeight = useCallback(
+    (key: keyof DimensionWeights, value: number) => {
+      setWeights((w) => ({ ...w, [key]: value }));
+    },
+    [],
+  );
 
   const updateThreshold = useCallback(
     (id: IndicatorId, patch: Partial<ThresholdBand>) => {
@@ -169,8 +183,8 @@ export function useRiskMonitor() {
     const esc: Record<string, boolean> = {};
     const rep: Record<string, boolean> = {};
     for (const [cid, st] of Object.entries(rec.checklist)) {
-      if (cid.startsWith('esc-')) esc[cid] = st.manualConfirmed;
-      if (cid.startsWith('rep-')) rep[cid] = st.manualConfirmed;
+      if (cid.startsWith('risk_')) esc[cid] = st.manualConfirmed;
+      if (cid.startsWith('reset_')) rep[cid] = st.manualConfirmed;
     }
     setManualEsc(esc);
     setManualRep(rep);

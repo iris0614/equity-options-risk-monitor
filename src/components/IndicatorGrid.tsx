@@ -19,9 +19,12 @@ export function IndicatorGrid({ score, onChange }: Props) {
   return (
     <section className="panel p-3 md:p-4">
       <div className="mb-3">
-        <h2 className="text-sm font-semibold text-navy">五维指标与压力滑杆</h2>
+        <h2 className="text-sm font-semibold text-navy">
+          五大维度核心指标实时监控与压力测试
+        </h2>
         <p className="text-[11px] text-navy-soft">
-          调整滑杆即时重算综合分、阶段判断与传导高亮 · 缺失显示 N/A
+          支持直接输入或拖动滑块推演 · 即时重算评分 / 阶段 / 清单 · 缺失显示
+          N/A
         </p>
       </div>
       <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
@@ -35,7 +38,9 @@ export function IndicatorGrid({ score, onChange }: Props) {
                   <h3 className="text-xs font-semibold text-navy">
                     {labels.zh}
                   </h3>
-                  <p className="text-[10px] text-navy-soft">{labels.en}</p>
+                  <p className="text-[10px] text-navy-soft">
+                    {labels.subtitle}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="font-mono text-sm font-semibold text-navy">

@@ -4,117 +4,89 @@ import type {
   StageResult,
   ThresholdBand,
   TransmissionEval,
-  TransmissionLinkId,
   IndicatorId,
 } from '../types';
-import { evalStatus } from './thresholds';
+import { toFlat } from './status';
 
 /**
- * Dynamic transmission highlight.
- * Vanna link intensity depends on vannaSign — vol↑ does NOT always mean sell.
+ * Dynamic highlight of the original 6-node chain.
+ * Vanna does not assume vol↑ ⇒ sell; intensity rises with stage 3 + neg gamma.
  */
 export function evalTransmission(
   snap: IndicatorSnapshot,
   stages: StageResult,
-  thresholds: Record<IndicatorId, ThresholdBand>,
+  _thresholds: Record<IndicatorId, ThresholdBand>,
 ): TransmissionEval[] {
-  const status = (id: IndicatorId) =>
-    evalStatus(snap[id]?.value ?? null, thresholds[id]);
+  const s = toFlat(snap);
+  const stage = stages.primary ? Number(stages.primary) : 0;
 
-  const vannaSign = snap.vannaSign?.value;
-  const volUp =
-    status('vix') === 'triggered' || status('vvix') === 'triggered';
+  const corr =
+    (s.vixeqVix !== null && s.vixeqVix < 2.0) ||
+    (s.dspx !== null && s.dspx < 39);
+  const unwind = s.vixeqVix !== null && s.vixeqVix < 1.85;
+  const gamma =
+    (s.gex !== null && s.gex < 0) ||
+    (s.dealerGamma !== null && s.dealerGamma < 0);
+  const volTerm =
+    (s.vix !== null && s.vix >= 20) ||
+    (s.vixVxv !== null && s.vixVxv >= 0.95) ||
+    (s.vvix !== null && s.vvix >= 100);
+  const vanna =
+    stage >= 3 ||
+    (s.vix !== null &&
+      s.vix >= 28 &&
+      s.vixVxv !== null &&
+      s.vixVxv > 1 &&
+      s.dealerGamma !== null &&
+      s.dealerGamma < 0);
+  const cascade =
+    stages.macroDefense ||
+    (s.dealerGamma !== null && s.dealerGamma <= -8.6) ||
+    (stage >= 3 &&
+      s.netDeltaFlow !== null &&
+      s.netDeltaFlow <= -60);
 
-  const links: Record<TransmissionLinkId, { active: boolean; intensity: number; reason: string }> = {
-    dispersion: {
-      active:
-        status('vixeqVix') !== 'normal' && status('vixeqVix') !== 'na',
-      intensity:
-        status('vixeqVix') === 'triggered'
-          ? 1
-          : status('vixeqVix') === 'warning'
-            ? 0.6
-            : 0,
-      reason: 'VIXEQ/VIX / DSPX dispersion stress',
-    },
-    volSpike: {
-      active: status('vix') !== 'normal' && status('vix') !== 'na',
-      intensity: status('vix') === 'triggered' ? 1 : 0.55,
-      reason: `VIX=${snap.vix?.value ?? 'N/A'}`,
-    },
-    liquidity: {
-      active: status('vvix') !== 'normal' && status('vvix') !== 'na',
-      intensity: status('vvix') === 'triggered' ? 1 : 0.55,
-      reason: `VVIX=${snap.vvix?.value ?? 'N/A'}`,
-    },
-    gammaFlip: {
-      active:
-        status('gex') === 'triggered' ||
-        status('dealerGamma') === 'triggered' ||
-        status('gex') === 'warning',
-      intensity: status('gex') === 'triggered' ? 1 : 0.6,
-      reason: `GEX=${snap.gex?.value ?? 'N/A'} $B`,
-    },
-    vanna: {
-      active: false,
-      intensity: 0,
-      reason: '',
-    },
-    deltaHedge: {
-      active:
-        status('netDeltaFlow') === 'warning' ||
-        status('netDeltaFlow') === 'triggered',
-      intensity: status('netDeltaFlow') === 'triggered' ? 1 : 0.6,
-      reason: `NetΔ=${snap.netDeltaFlow?.value ?? 'N/A'}`,
-    },
-    cascade: {
-      active:
-        stages.primary === '04' ||
-        (status('netDeltaFlow') === 'triggered' &&
-          status('indexPc') === 'triggered' &&
-          status('vvix') === 'triggered'),
-      intensity: stages.primary === '04' ? 1 : 0.75,
-      reason: 'Broad put surge + deep negative delta + extreme VVIX',
-    },
+  const flags = {
+    correlation: corr,
+    dispersionUnwind: unwind || stage >= 2,
+    gammaSqueeze: gamma || stage >= 3,
+    volTerm: volTerm || stage >= 3,
+    vanna,
+    cascade,
   };
 
-  // Vanna: directionally gated
-  if (vannaSign === null || vannaSign === undefined) {
-    links.vanna = {
-      active: false,
-      intensity: 0,
-      reason: 'Vanna 符号缺失 → N/A（不假设波动↑=卖压）',
-    };
-  } else if (vannaSign < 0 && volUp && links.gammaFlip.active) {
-    links.vanna = {
-      active: true,
-      intensity: 1,
-      reason: 'Vanna=-1 且波动抬升 + 负 Gamma → 卖压加速（头寸依赖）',
-    };
-  } else if (vannaSign > 0 && volUp) {
-    links.vanna = {
-      active: true,
-      intensity: 0.45,
-      reason: 'Vanna=+1：波动↑倾向买盘对冲，而非卖压',
-    };
-  } else if (vannaSign < 0 && !volUp) {
-    links.vanna = {
-      active: false,
-      intensity: 0.2,
-      reason: 'Vanna 为负但波动未触发 — 潜在卖压路径待命',
-    };
-  } else {
-    links.vanna = {
-      active: false,
-      intensity: 0,
-      reason: 'Vanna 中性 / 未与波动触发共振',
-    };
-  }
+  const reasons = {
+    correlation: corr
+      ? 'VIXEQ/VIX 或 DSPX 显示相关性/离散压力'
+      : '相关性压力未激活',
+    dispersionUnwind: unwind
+      ? 'VIXEQ/VIX < 1.85 — 离散平仓压力'
+      : '离散平仓未触发',
+    gammaSqueeze: gamma
+      ? `GEX=${s.gex ?? 'N/A'} / DealerΓ=${s.dealerGamma ?? 'N/A'}`
+      : '仍处正/中性 Gamma',
+    volTerm: volTerm
+      ? `VIX=${s.vix ?? 'N/A'} VIX/VXV=${s.vixVxv ?? 'N/A'} VVIX=${s.vvix ?? 'N/A'}`
+      : '期限/波动未抬升',
+    vanna: vanna
+      ? 'VIX≥28 + 倒挂 + 负 Gamma 共振（头寸依赖，非默认 vol↑=卖压）'
+      : 'Vanna 条件未齐备',
+    cascade: cascade
+      ? '宏观防御或击穿 -8.6B / 深负 Delta — 机械加速'
+      : '加速器未激活',
+  };
 
-  return TRANSMISSION_LINKS.map((l) => ({
-    id: l.id,
-    active: links[l.id].active,
-    intensity: links[l.id].intensity,
-    reason: links[l.id].reason,
-  }));
+  return TRANSMISSION_LINKS.map((l) => {
+    const active = flags[l.id];
+    return {
+      id: l.id,
+      active,
+      intensity: active
+        ? l.id === 'cascade' || l.id === 'vanna'
+          ? 1
+          : 0.7
+        : 0,
+      reason: reasons[l.id],
+    };
+  });
 }

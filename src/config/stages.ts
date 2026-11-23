@@ -1,82 +1,54 @@
 import type { StageDef } from '../types';
 
 /**
- * Four risk stages with enter/exit conditions.
- * Stages are non-linear: jumps, repeats, and conflicts are allowed.
+ * Four stages — names/descriptions from original site.
+ * Enter/exit lists are descriptive for UI; live judgment uses detectRegime().
  */
 export const STAGE_DEFS: StageDef[] = [
   {
     id: '01',
-    name: 'Elevated Fragility',
-    nameZh: '高位脆弱 / 离散度抬升',
+    name: 'Dispersion Steady State',
+    nameZh: '缩圈与离散稳态期',
     description:
-      'Dispersion & correlation stress rising while spot vol still moderate. Early fragility window.',
-    enter: [
-      { indicatorId: 'vixeqVix', op: 'gte', level: 'warning', required: true },
-      { indicatorId: 'dspx', op: 'gte', level: 'warning', required: false },
-      { indicatorId: 'nvdaProxy', op: 'gte', level: 'warning', required: false },
-    ],
-    exit: [
-      { indicatorId: 'vixeqVix', op: 'lt', level: 'warning', required: true },
-      { indicatorId: 'dspx', op: 'lt', level: 'warning', required: false },
-    ],
-    transmissionLinks: ['dispersion'],
+      '卖指数波 + 买个股波压低相关性；做市商正 Gamma 充当阻尼器，机械买盘托举权重股。',
+    enter: [],
+    exit: [],
+    transmissionLinks: ['correlation'],
   },
   {
     id: '02',
-    name: 'Vol Expansion & Liquidity Strain',
-    nameZh: '波动扩张与流动性挤兑',
+    name: 'Crowding Peak & Early Retreat',
+    nameZh: '拥挤见顶与先遣撤退期',
     description:
-      'VIX/VVIX lift with put demand; term structure flattens. Liquidity premium rising.',
-    enter: [
-      { indicatorId: 'vix', op: 'gte', level: 'warning', required: true },
-      { indicatorId: 'vvix', op: 'gte', level: 'warning', required: true },
-      { indicatorId: 'totalPc', op: 'gte', level: 'warning', required: false },
-      { indicatorId: 'vixVxv', op: 'gte', level: 'warning', required: false },
-    ],
-    exit: [
-      { indicatorId: 'vix', op: 'lt', level: 'warning', required: true },
-      { indicatorId: 'vvix', op: 'lt', level: 'warning', required: true },
-    ],
-    transmissionLinks: ['dispersion', 'volSpike', 'liquidity'],
+      'CBOE SKEW 飙升至 160~170 抢买尾部险；个股 P/C 率先筑底抬头，龙头上升通道松动。',
+    enter: [],
+    exit: [],
+    transmissionLinks: ['correlation', 'dispersionUnwind'],
   },
   {
     id: '03',
-    name: 'Negative Gamma + Vanna Acceleration',
-    nameZh: '负 Gamma 踩踏与 Vanna 加速',
+    name: 'Negative Feedback + Vanna Acceleration',
+    nameZh: '负反馈翻转与 Vanna 踩踏加速期',
     description:
-      'Dealer short-gamma regime with active vanna/delta hedge feedback. Not every vol↑ implies sell — vannaSign gates direction.',
-    enter: [
-      { indicatorId: 'gex', op: 'lte', level: 'triggered', required: true },
-      { indicatorId: 'dealerGamma', op: 'lte', level: 'warning', required: true },
-      { indicatorId: 'vix', op: 'gte', level: 'triggered', required: false },
-      { indicatorId: 'vvix', op: 'gte', level: 'triggered', required: false },
-      { indicatorId: 'netDeltaFlow', op: 'lte', level: 'warning', required: false },
+      '离散平仓、VIX > 28 且期限倒挂、VVIX 破红线；负 Gamma 与 Vanna 双重逼迫做市商砸盘。',
+    enter: [],
+    exit: [],
+    transmissionLinks: [
+      'dispersionUnwind',
+      'gammaSqueeze',
+      'volTerm',
+      'vanna',
+      'cascade',
     ],
-    exit: [
-      { indicatorId: 'gex', op: 'gt', level: 'warning', required: true },
-      { indicatorId: 'dealerGamma', op: 'gt', level: 'warning', required: false },
-    ],
-    transmissionLinks: ['gammaFlip', 'vanna', 'deltaHedge'],
   },
   {
     id: '04',
-    name: 'Systemic Deleveraging',
-    nameZh: '系统性去杠杆 / 流动性枯竭',
+    name: 'Extreme Clearance + Reverse Vanna Repair',
+    nameZh: '极端出清与反向 Vanna 修复期',
     description:
-      'Broad put surge, deep negative delta flow, extreme VVIX, and backwardation — liquidation cascade risk.',
-    enter: [
-      { indicatorId: 'netDeltaFlow', op: 'lte', level: 'triggered', required: true },
-      { indicatorId: 'indexPc', op: 'gte', level: 'triggered', required: true },
-      { indicatorId: 'vvix', op: 'gte', level: 'triggered', required: true },
-      { indicatorId: 'vix9dVix', op: 'gte', level: 'triggered', required: false },
-      { indicatorId: 'gex', op: 'lte', level: 'triggered', required: false },
-    ],
-    exit: [
-      { indicatorId: 'netDeltaFlow', op: 'gt', level: 'warning', required: true },
-      { indicatorId: 'vvix', op: 'lt', level: 'triggered', required: true },
-      { indicatorId: 'indexPc', op: 'lt', level: 'triggered', required: false },
-    ],
-    transmissionLinks: ['gammaFlip', 'vanna', 'deltaHedge', 'cascade'],
+      '月度 OPEX 交割重置叠加 Put 获利了结；VVIX 回落与倒挂收窄触发反向 Vanna 空头回补。',
+    enter: [],
+    exit: [],
+    transmissionLinks: ['volTerm', 'vanna'],
   },
 ];

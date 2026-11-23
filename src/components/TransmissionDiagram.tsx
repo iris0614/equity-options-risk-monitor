@@ -12,9 +12,11 @@ export function TransmissionDiagram({ links }: Props) {
     <section className="panel p-3 md:p-4">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-navy">风险传导链路</h2>
+          <h2 className="text-sm font-semibold text-navy">
+            核心负反馈传导链
+          </h2>
           <p className="text-[11px] text-navy-soft">
-            动态高亮当前激活环节 · Vanna 方向不默认「波动↑=卖压」
+            六节点链路动态高亮 · Vanna 不默认「波动↑=卖压」
           </p>
         </div>
       </div>

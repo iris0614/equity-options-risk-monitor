@@ -1,5 +1,4 @@
 import { INDICATOR_BY_ID } from '../config/indicators';
-import { thresholdLabel } from '../engine/thresholds';
 import type { IndicatorEval, IndicatorId } from '../types';
 import { formatNum, statusClass, statusLabel } from '../utils/format';
 
@@ -40,13 +39,10 @@ export function IndicatorCard({ evalItem, onChange }: Props) {
       </div>
 
       <p
-        className="mt-1 text-[10px] leading-snug text-navy-muted"
+        className="mt-1 text-[10px] leading-snug text-navy-soft"
         title={def.tooltip}
       >
         {def.description}
-      </p>
-      <p className="text-[10px] text-navy-soft">
-        {thresholdLabel(evalItem.threshold)}
       </p>
 
       <div className="mt-2 flex items-center gap-2">

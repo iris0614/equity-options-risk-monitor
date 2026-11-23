@@ -1,6 +1,6 @@
-import type { IndicatorStatus, ThresholdBand } from '../types';
+import type { ThresholdBand } from '../types';
 
-/** Compare value against a threshold level. */
+/** Legacy helpers retained for config UI / tests. */
 export function crossesLevel(
   value: number,
   band: ThresholdBand,
@@ -20,28 +20,23 @@ export function crossesLevel(
   }
 }
 
-/** Status from value + band. Missing → N/A. */
 export function evalStatus(
   value: number | null | undefined,
   band: ThresholdBand,
-): IndicatorStatus {
+) {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return 'na';
+    return 'na' as const;
   }
   if (band.inverted) {
-    if (value <= band.triggered) return 'triggered';
-    if (value <= band.warning) return 'warning';
-    return 'normal';
+    if (value <= band.triggered) return 'triggered' as const;
+    if (value <= band.warning) return 'warning' as const;
+    return 'normal' as const;
   }
-  if (value >= band.triggered) return 'triggered';
-  if (value >= band.warning) return 'warning';
-  return 'normal';
+  if (value >= band.triggered) return 'triggered' as const;
+  if (value >= band.warning) return 'warning' as const;
+  return 'normal' as const;
 }
 
-/**
- * Normalize indicator to 0–100 stress score.
- * Higher = more stressed. Inverted bands: more negative → higher stress.
- */
 export function normalizeToStress(
   value: number | null | undefined,
   band: ThresholdBand,
@@ -51,40 +46,25 @@ export function normalizeToStress(
   if (value === null || value === undefined || Number.isNaN(value)) {
     return null;
   }
-
   if (band.inverted) {
-    // Map: softMax (calm) → 0, triggered → 85, beyond → 100
     const calm = softMax;
     const warn = band.warning;
     const trig = band.triggered;
     const floor = softMin;
     if (value >= calm) return 0;
-    if (value >= warn) {
-      return ((calm - value) / (calm - warn)) * 40;
-    }
-    if (value >= trig) {
-      return 40 + ((warn - value) / (warn - trig)) * 35;
-    }
-    if (value >= floor) {
-      return 75 + ((trig - value) / (trig - floor)) * 25;
-    }
+    if (value >= warn) return ((calm - value) / (calm - warn)) * 40;
+    if (value >= trig) return 40 + ((warn - value) / (warn - trig)) * 35;
+    if (value >= floor) return 75 + ((trig - value) / (trig - floor)) * 25;
     return 100;
   }
-
   const calm = softMin;
   const warn = band.warning;
   const trig = band.triggered;
   const ceil = softMax;
   if (value <= calm) return 0;
-  if (value <= warn) {
-    return ((value - calm) / (warn - calm)) * 40;
-  }
-  if (value <= trig) {
-    return 40 + ((value - warn) / (trig - warn)) * 35;
-  }
-  if (value <= ceil) {
-    return 75 + ((value - trig) / (ceil - trig)) * 25;
-  }
+  if (value <= warn) return ((value - calm) / (warn - calm)) * 40;
+  if (value <= trig) return 40 + ((value - warn) / (trig - warn)) * 35;
+  if (value <= ceil) return 75 + ((value - trig) / (ceil - trig)) * 25;
   return 100;
 }
 

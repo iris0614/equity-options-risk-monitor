@@ -1,4 +1,4 @@
-/** Shared domain types for Institutional Risk Monitor */
+/** Shared domain types — aligned to original fupeng715 embed. */
 
 export type IndicatorStatus = 'normal' | 'warning' | 'triggered' | 'na';
 
@@ -23,33 +23,24 @@ export type IndicatorId =
   | 'indexPc'
   | 'gex'
   | 'dealerGamma'
-  | 'netDeltaFlow'
-  | 'vannaSign'
-  | 'charmFlow';
+  | 'netDeltaFlow';
 
 export type StageId = '01' | '02' | '03' | '04';
 
 export type StageState = 'inactive' | 'passed' | 'active' | 'observing' | 'conflict';
 
-export type ScoreBandId =
-  | 'calm'
-  | 'elevated'
-  | 'stressed'
-  | 'fragile'
-  | 'extreme';
+export type ScoreBandId = 'calm' | 'elevated' | 'stressed';
 
 export type ScenarioId =
   | 'baseline'
-  | 'highFragility'
-  | 'tailDefense'
-  | 'systemicDeleveraging'
-  | 'extremeSqueeze'
-  | 'postOpexRepair';
+  | 'stage1'
+  | 'stage2'
+  | 'stage3Ext'
+  | 'stage4';
 
 export interface ThresholdBand {
   warning: number;
   triggered: number;
-  /** Higher value = worse unless inverted */
   inverted?: boolean;
 }
 
@@ -60,7 +51,6 @@ export interface IndicatorDef {
   labelZh: string;
   description: string;
   unit: string;
-  /** Slider / input range */
   min: number;
   max: number;
   step: number;
@@ -71,13 +61,13 @@ export interface IndicatorDef {
 export interface IndicatorValue {
   id: IndicatorId;
   value: number | null;
-  /** true when value comes from scenario / stress, not live feed */
   simulated: boolean;
   asOf: string;
 }
 
 export type IndicatorSnapshot = Record<IndicatorId, IndicatorValue>;
 
+/** Display weights matching original formula caps (vol25/term15/dealer30/disp15/flow15). */
 export interface DimensionWeights {
   dispersion: number;
   volLiquidity: number;
@@ -127,13 +117,13 @@ export interface CompositeScore {
   band: ScoreBand | null;
   dimensions: DimensionEval[];
   trace: ScoreTraceLine[];
+  components: { name: string; points: number; cap: number }[];
   asOf: string;
   disclaimer: string;
 }
 
 export interface StageCondition {
   indicatorId: IndicatorId;
-  /** 'gte' for higher-worse; 'lte' for lower-worse (inverted) */
   op: 'gte' | 'lte' | 'lt' | 'gt';
   level: 'warning' | 'triggered';
   required: boolean;
@@ -146,7 +136,6 @@ export interface StageDef {
   enter: StageCondition[];
   exit: StageCondition[];
   description: string;
-  /** Transmission link ids typically active in this stage */
   transmissionLinks: string[];
 }
 
@@ -172,18 +161,19 @@ export interface StageJudgment {
 
 export interface StageResult {
   primary: StageId | null;
+  title: string;
+  macroDefense: boolean;
   judgments: StageJudgment[];
   conflicts: StageId[];
   nonLinearNote: string;
 }
 
 export type TransmissionLinkId =
-  | 'dispersion'
-  | 'volSpike'
-  | 'liquidity'
-  | 'gammaFlip'
+  | 'correlation'
+  | 'dispersionUnwind'
+  | 'gammaSqueeze'
+  | 'volTerm'
   | 'vanna'
-  | 'deltaHedge'
   | 'cascade';
 
 export interface TransmissionLink {
@@ -204,7 +194,9 @@ export interface ChecklistItemDef {
   id: string;
   label: string;
   labelZh: string;
-  /** Auto-eval from indicators; null = manual only */
+  sub?: string;
+  /** Custom auto predicate over flat state — preferred for original rules */
+  autoFn?: 'risk1' | 'risk2' | 'risk3' | 'risk4' | 'reset1' | 'reset2' | 'reset3' | 'reset4';
   auto?: {
     indicatorId: IndicatorId;
     op: 'gte' | 'lte' | 'gt' | 'lt';
@@ -237,12 +229,6 @@ export interface ScenarioDef {
   series?: MarketSeriesPoint[];
 }
 
-export interface MonitorConfig {
-  weights: DimensionWeights;
-  thresholds: Record<IndicatorId, ThresholdBand>;
-  bands: ScoreBand[];
-}
-
 export interface SnapshotRecord {
   id: string;
   name: string;
@@ -254,9 +240,5 @@ export interface SnapshotRecord {
   checklist: Record<string, ChecklistItemState>;
 }
 
-export interface ChartMeta {
-  title: string;
-  asOf: string;
-  simulated: boolean;
-  units: string;
-}
+/** Flat numeric state used by original formulas (null → skipped / N/A). */
+export type FlatState = Record<IndicatorId, number | null>;

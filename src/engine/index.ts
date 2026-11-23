@@ -9,8 +9,8 @@ import type {
   ThresholdBand,
 } from '../types';
 
-export { computeCompositeScore, formatScore } from './score';
-export { judgeStages, stageDefById } from './stages';
+export { computeCompositeScore, formatScore, computeStressIndex } from './score';
+export { judgeStages, stageDefById, detectRegime } from './stages';
 export { evalTransmission } from './transmission';
 export { evalDualChecklists } from './checklist';
 export {
@@ -19,6 +19,7 @@ export {
   crossesLevel,
   thresholdLabel,
 } from './thresholds';
+export { evalIndicatorStatus, toFlat } from './status';
 
 export interface MonitorModel {
   score: ReturnType<typeof computeCompositeScore>;
@@ -27,7 +28,6 @@ export interface MonitorModel {
   checklists: ReturnType<typeof evalDualChecklists>;
 }
 
-/** Single entry: indicators → score → stages → transmission → checklists */
 export function runMonitorModel(
   snap: IndicatorSnapshot,
   weights: DimensionWeights,

@@ -1,5 +1,6 @@
 import ReactECharts from 'echarts-for-react';
 import type { IndicatorSnapshot, ThresholdBand, IndicatorId } from '../../types';
+import { DEALER_GAMMA_FLOOR } from '../../config/indicators';
 import { formatAsOf, formatNum } from '../../utils/format';
 
 interface Props {
@@ -92,8 +93,8 @@ export function DealerExposureChart({ snap, thresholds, asOf }: Props) {
         <div>
           <h3 className="text-sm font-semibold text-navy">做市商敞口</h3>
           <p className="text-[10px] text-navy-soft">
-            GEX / Gamma / Net Δ · 估算属性 ·{' '}
-            <span className="text-warn">情景模拟</span>
+            Dealer Agg Gamma ({DEALER_GAMMA_FLOOR}B 底线) / SPX GEX / Net Delta
+            · 估算 · <span className="text-warn">情景模拟</span>
           </p>
         </div>
         <span className="text-[10px] text-navy-soft">{formatAsOf(asOf)}</span>
@@ -103,20 +104,14 @@ export function DealerExposureChart({ snap, thresholds, asOf }: Props) {
         style={{ height: 200 }}
         opts={{ renderer: 'svg' }}
       />
-      <div className="mt-1 grid grid-cols-3 gap-2 text-[10px] text-navy-muted">
-        <div>
-          Vanna{' '}
-          <span className="font-mono font-semibold text-navy">
-            {formatNum(snap.vannaSign.value, 0)}
-          </span>
-        </div>
-        <div>
-          Charm{' '}
-          <span className="font-mono font-semibold text-navy">
-            {formatNum(snap.charmFlow.value, 0)} pts
-          </span>
-        </div>
-        <div className="text-navy-soft">方法：OI×γ×S² 估算</div>
+      <div className="mt-1 text-[10px] text-navy-muted">
+        距离 {DEALER_GAMMA_FLOOR}B 历史底线缓冲：
+        <span className="font-mono font-semibold text-navy">
+          {snap.dealerGamma.value === null
+            ? 'N/A'
+            : `${formatNum(snap.dealerGamma.value - DEALER_GAMMA_FLOOR, 1)} $B`}
+        </span>
+        · 方法：OI×γ×S² 估算（非交易所披露）
       </div>
     </div>
   );

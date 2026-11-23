@@ -1,56 +1,45 @@
 import type { DimensionWeights, ScoreBand } from '../types';
 
-/** Initial dimension weights (must sum to 100). */
+/**
+ * Original-site formula caps (display / documentation):
+ * vol 25 + term 15 + dealer 30 + dispersion 15 + put/call 15 = 100.
+ * Kickoff brief 15/20/25/15/25 is NOT used — original site takes precedence.
+ */
 export const DEFAULT_WEIGHTS: DimensionWeights = {
+  volLiquidity: 25,
+  termTail: 15,
+  dealer: 30,
   dispersion: 15,
-  volLiquidity: 20,
-  termTail: 25,
   putCall: 15,
-  dealer: 25,
 };
 
+/** Original colour bands: ≥70 red, ≥40 amber, <40 green. */
 export const SCORE_BANDS: ScoreBand[] = [
   {
     id: 'calm',
     label: 'Calm',
     labelZh: '平稳',
     min: 0,
-    max: 29,
+    max: 39,
     color: '#1A7F37',
   },
   {
     id: 'elevated',
     label: 'Elevated',
     labelZh: '抬升',
-    min: 30,
-    max: 49,
+    min: 40,
+    max: 69,
     color: '#B45309',
   },
   {
     id: 'stressed',
     label: 'Stressed',
-    labelZh: '承压',
-    min: 50,
-    max: 69,
-    color: '#C2410C',
-  },
-  {
-    id: 'fragile',
-    label: 'Fragile',
-    labelZh: '脆弱加速',
+    labelZh: '高压',
     min: 70,
-    max: 84,
-    color: '#B91C1C',
-  },
-  {
-    id: 'extreme',
-    label: 'Extreme',
-    labelZh: '极端',
-    min: 85,
     max: 100,
-    color: '#7F1D1D',
+    color: '#B91C1C',
   },
 ];
 
 export const SCORE_DISCLAIMER =
-  '综合评分反映微观结构与流动性压力的加权合成，不可解释为崩盘概率或交易建议。Composite score is not crash probability.';
+  '仅用于机构微观结构逻辑推演与复盘参考，不构成投资建议。综合评分不可解释为崩盘概率。';

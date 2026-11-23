@@ -11,16 +11,10 @@ interface Props {
 export function PutCallChart({ snap, thresholds, asOf }: Props) {
   const cats = ['个股 P/C', '全市场 P/C', '指数 P/C'];
   const current = [snap.equityPc.value, snap.totalPc.value, snap.indexPc.value];
-  const warn = [
-    thresholds.equityPc.warning,
-    thresholds.totalPc.warning,
-    thresholds.indexPc.warning,
-  ];
-  const trig = [
-    thresholds.equityPc.triggered,
-    thresholds.totalPc.triggered,
-    thresholds.indexPc.triggered,
-  ];
+  // Original chart red lines: 0.80 / 1.25 / 1.25
+  const warn = [0.68, 1.0, 1.12];
+  const trig = [0.8, 1.25, 1.25];
+  void thresholds;
 
   const option = {
     color: ['#1D4ED8', '#94A3B8', '#B91C1C'],
@@ -94,7 +88,8 @@ export function PutCallChart({ snap, thresholds, asOf }: Props) {
         <div>
           <h3 className="text-sm font-semibold text-navy">Put/Call 与阈值</h3>
           <p className="text-[10px] text-navy-soft">
-            CBOE 风格比率 · <span className="text-warn">情景模拟</span>
+            当前量能比 vs 风险扩散红线（0.80 / 1.25 / 1.25）·{' '}
+            <span className="text-warn">情景模拟</span>
           </p>
         </div>
         <span className="text-[10px] text-navy-soft">{formatAsOf(asOf)}</span>

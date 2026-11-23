@@ -48,7 +48,7 @@ export function ScenarioBar({
             onClick={onReset}
             className="rounded border border-line bg-white px-2.5 py-1 text-xs font-medium text-navy-muted hover:bg-canvas"
           >
-            重置基准
+            重置为 11/19 实盘数据
           </button>
           <button
             type="button"
@@ -73,8 +73,7 @@ export function ScenarioBar({
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                const text = await file.text();
-                onImportFile(text);
+                onImportFile(await file.text());
                 e.target.value = '';
               }}
             />
@@ -82,7 +81,7 @@ export function ScenarioBar({
         </div>
       </div>
       <p className="mt-1.5 text-[11px] text-navy-soft">
-        全部情景数据均为「情景模拟」研究样本，非实时行情。切换情景会重算评分、阶段与传导高亮。
+        情景数据来自原始仪表盘硬编码样本（「情景模拟」），非实时行情接口。
       </p>
     </section>
   );
