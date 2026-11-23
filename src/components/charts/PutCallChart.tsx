@@ -1,6 +1,5 @@
 import ReactECharts from 'echarts-for-react';
 import type { IndicatorSnapshot, ThresholdBand, IndicatorId } from '../../types';
-import { formatAsOf } from '../../utils/format';
 
 interface Props {
   snap: IndicatorSnapshot;
@@ -8,76 +7,106 @@ interface Props {
   asOf: string;
 }
 
-export function PutCallChart({ snap, thresholds, asOf }: Props) {
-  const cats = ['个股 P/C', '全市场 P/C', '指数 P/C'];
-  const current = [snap.equityPc.value, snap.totalPc.value, snap.indexPc.value];
-  // Original chart red lines: 0.80 / 1.25 / 1.25
-  const warn = [0.68, 1.0, 1.12];
-  const trig = [0.8, 1.25, 1.25];
-  void thresholds;
+/** Category colors from original embed (灰 / 橙 / 蓝). */
+const CURRENT_COLORS = ['#64748B', '#EA580C', '#1D4ED8'] as const;
+const RED_LINES = [0.8, 1.25, 1.25] as const;
+
+function flowBadge(
+  equity: number | null,
+  total: number | null,
+  index: number | null,
+): { text: string; className: string } {
+  if (
+    index !== null &&
+    equity !== null &&
+    index >= 1.25 &&
+    equity >= 0.8
+  ) {
+    return {
+      text: '宏观全面防御',
+      className: 'bg-red-50 text-danger',
+    };
+  }
+  if (
+    (equity !== null && equity >= 0.68) ||
+    (total !== null && total >= 1.0)
+  ) {
+    return {
+      text: '个股率先发力',
+      className: 'bg-amber-50 text-warn',
+    };
+  }
+  return {
+    text: '结构平稳',
+    className: 'bg-emerald-50 text-ok',
+  };
+}
+
+export function PutCallChart({ snap, thresholds: _thresholds, asOf: _asOf }: Props) {
+  void _thresholds;
+  void _asOf;
+  const equity = snap.equityPc.value;
+  const total = snap.totalPc.value;
+  const index = snap.indexPc.value;
+  const current = [equity, total, index];
+  const badge = flowBadge(equity, total, index);
 
   const option = {
-    color: ['#1D4ED8', '#94A3B8', '#B91C1C'],
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       valueFormatter: (v: number) => Number(v).toFixed(2),
     },
     legend: {
-      data: ['当前', '警戒线', '触发线'],
-      top: 0,
-      textStyle: { fontSize: 11 },
+      data: ['当前数值', '红线阈值'],
+      bottom: 0,
+      textStyle: { fontSize: 11, color: '#3D4F66' },
+      itemWidth: 12,
+      itemHeight: 12,
     },
-    grid: { left: 40, right: 12, top: 36, bottom: 28 },
+    grid: { left: 40, right: 12, top: 12, bottom: 48 },
     xAxis: {
       type: 'category',
-      data: cats,
-      axisLabel: { fontSize: 11 },
+      data: ['个股 P/C（灰线）', '全市场 P/C（橙线）', '指数 P/C（蓝线）'],
+      axisLabel: { fontSize: 11, color: '#3D4F66' },
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: '#D8DEE8' } },
     },
     yAxis: {
       type: 'value',
-      name: '比率',
-      nameTextStyle: { fontSize: 10 },
+      min: 0,
+      max: 1.6,
+      interval: 0.2,
       splitLine: { lineStyle: { color: '#E8EDF4' } },
+      axisLabel: { fontSize: 10, color: '#5A6B7F' },
     },
     series: [
       {
-        name: '当前',
+        name: '当前数值',
         type: 'bar',
-        barWidth: 18,
-        data: current,
-        itemStyle: {
-          color: (params: { dataIndex: number; value: number | null }) => {
-            const v = params.value;
-            if (v === null || v === undefined) return '#94A3B8';
-            if (v >= trig[params.dataIndex]!) return '#B91C1C';
-            if (v >= warn[params.dataIndex]!) return '#B45309';
-            return '#1D4ED8';
+        barWidth: 22,
+        barGap: '30%',
+        data: current.map((v, i) => ({
+          value: v,
+          itemStyle: {
+            color: v === null ? '#94A3B8' : CURRENT_COLORS[i],
+            borderRadius: [4, 4, 0, 0],
           },
-        },
+        })),
       },
       {
-        name: '警戒线',
+        name: '红线阈值',
         type: 'bar',
-        barWidth: 10,
-        data: warn,
-        itemStyle: {
-          color: 'transparent',
-          borderColor: '#94A3B8',
-          borderWidth: 1.5,
-        },
-      },
-      {
-        name: '触发线',
-        type: 'bar',
-        barWidth: 10,
-        data: trig,
-        itemStyle: {
-          color: 'transparent',
-          borderColor: '#B91C1C',
-          borderWidth: 1.5,
-          borderType: 'dashed',
-        },
+        barWidth: 22,
+        data: RED_LINES.map((v) => ({
+          value: v,
+          itemStyle: {
+            color: 'rgba(254, 226, 226, 0.55)',
+            borderColor: '#EF4444',
+            borderWidth: 1.5,
+            borderRadius: [4, 4, 0, 0],
+          },
+        })),
       },
     ],
   };
@@ -85,20 +114,30 @@ export function PutCallChart({ snap, thresholds, asOf }: Props) {
   return (
     <div className="panel flex h-full flex-col p-3">
       <div className="mb-1 flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-navy">Put/Call 与阈值</h3>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-navy">
+            期权流量扩散对比（CBOE Put/Call）
+          </h3>
           <p className="text-[10px] text-navy-soft">
-            当前量能比 vs 风险扩散红线（0.80 / 1.25 / 1.25）·{' '}
-            <span className="text-warn">情景模拟</span>
+            当前量能比 vs 风险扩散红线阈值（0.80 / 1.25 / 1.25）
           </p>
         </div>
-        <span className="text-[10px] text-navy-soft">{formatAsOf(asOf)}</span>
+        <span
+          className={`shrink-0 rounded px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}
+        >
+          {badge.text}
+        </span>
       </div>
       <ReactECharts
         option={option}
-        style={{ height: 280 }}
+        style={{ height: 240 }}
         opts={{ renderer: 'svg' }}
+        notMerge
       />
+      <div className="mt-1 flex items-start justify-between gap-2 text-[10px] text-navy-muted">
+        <p>结构特征：接近 2022 年初个股率先抬头特征</p>
+        <p className="shrink-0 text-navy-soft">基准红线：1.25</p>
+      </div>
     </div>
   );
 }
