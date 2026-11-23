@@ -54,6 +54,50 @@ input[type='range'] {
   accent-color: #1d4ed8;
 }
 
+/* Figure-2 style: gray track + blue thumb, no filled progress */
+.indicator-slider {
+  accent-color: #1d4ed8;
+}
+
+.indicator-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+
+.indicator-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border-radius: 9999px;
+  background: #1d4ed8;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(29, 78, 216, 0.35);
+  cursor: pointer;
+}
+
+.indicator-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+
+.indicator-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #1d4ed8;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(29, 78, 216, 0.35);
+  cursor: pointer;
+}
+
+.indicator-slider::-moz-range-progress {
+  background: transparent;
+}
+
 @keyframes pulse-border {
   0%,
   100% {
