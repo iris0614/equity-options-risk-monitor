@@ -1,6 +1,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { IndicatorSnapshot, MarketSeriesPoint } from '../../types';
-import { formatAsOf } from '../../utils/format';
+import { VANNA_VIX_LINE } from '../../config/indicators';
+import { formatNum } from '../../utils/format';
 
 interface Props {
   snap: IndicatorSnapshot;
@@ -9,101 +10,92 @@ interface Props {
   vixTrigger: number;
 }
 
-export function VolTermStructure({ snap, series, asOf, vixTrigger }: Props) {
-  const vix9d = snap.vix9dVix.value !== null && snap.vix.value !== null
-    ? snap.vix.value * snap.vix9dVix.value
-    : null;
+export function VolTermStructure({ snap, series: _series, vixTrigger }: Props) {
+  void _series;
+  const threshold = vixTrigger || VANNA_VIX_LINE;
+
   const vix = snap.vix.value;
-  const vix3m =
-    snap.vixVxv.value !== null && snap.vix.value !== null
-      ? snap.vix.value / snap.vixVxv.value
+  const vix9d =
+    snap.vix9dVix.value !== null && vix !== null
+      ? Math.round(vix * snap.vix9dVix.value * 10) / 10
+      : null;
+  const vxv =
+    snap.vixVxv.value !== null && vix !== null
+      ? Math.round((vix / snap.vixVxv.value) * 10) / 10
       : null;
 
+  const backwardation =
+    (snap.vixVxv.value !== null && snap.vixVxv.value > 1) ||
+    (snap.vix9dVix.value !== null && snap.vix9dVix.value > 1);
+
   const option = {
-    color: ['#B91C1C', '#1D4ED8', '#0F766E'],
+    color: ['#DC2626', '#94A3B8'],
     tooltip: {
       trigger: 'axis',
       valueFormatter: (v: number | null) =>
-        v === null || v === undefined ? 'N/A' : `${Number(v).toFixed(2)}`,
+        v === null || v === undefined ? 'N/A' : Number(v).toFixed(1),
     },
     legend: {
-      data: ['当前期限结构'],
-      top: 0,
-      textStyle: { fontSize: 11 },
+      data: [
+        { name: '当前期限结构', itemStyle: { color: '#DC2626' } },
+        {
+          name: `Vanna 触发阈值 (${threshold.toFixed(1)})`,
+          itemStyle: { color: '#94A3B8' },
+          lineStyle: { type: 'dashed', color: '#94A3B8' },
+        },
+      ],
+      bottom: 0,
+      textStyle: { fontSize: 11, color: '#3D4F66' },
+      itemWidth: 14,
+      itemHeight: 10,
     },
-    grid: { left: 40, right: 16, top: 36, bottom: 28 },
+    grid: { left: 36, right: 16, top: 16, bottom: 44 },
     xAxis: {
       type: 'category',
-      data: ['VIX9D', 'VIX', 'VIX3M'],
-      axisLabel: { fontSize: 11 },
+      data: ['VIX9D (9天超短端)', 'VIX (30天基准)', 'VXV (3个月季度端)'],
+      axisLabel: {
+        fontSize: 10,
+        color: '#3D4F66',
+        interval: 0,
+        hideOverlap: false,
+      },
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: '#D8DEE8' } },
     },
     yAxis: {
       type: 'value',
-      name: '指数点',
-      nameTextStyle: { fontSize: 10 },
-      axisLabel: { fontSize: 10 },
+      min: 10,
+      max: 40,
+      interval: 5,
       splitLine: { lineStyle: { color: '#E8EDF4' } },
+      axisLabel: { fontSize: 10, color: '#5A6B7F' },
     },
     series: [
       {
         name: '当前期限结构',
         type: 'line',
-        data: [vix9d, vix, vix3m],
-        symbolSize: 8,
-        lineStyle: { width: 2.5, color: '#1D4ED8' },
-        itemStyle: { color: '#1D4ED8' },
-        markLine: {
-          symbol: 'none',
-          label: {
-            formatter: `Vanna 观察线 ${vixTrigger}`,
-            fontSize: 10,
-            color: '#B91C1C',
-          },
-          lineStyle: { type: 'dashed', color: '#B91C1C' },
-          data: [{ yAxis: vixTrigger }],
+        data: [vix9d, vix, vxv],
+        symbol: 'circle',
+        symbolSize: 10,
+        showSymbol: true,
+        lineStyle: { width: 3, color: '#DC2626' },
+        itemStyle: {
+          color: '#FFFFFF',
+          borderColor: '#DC2626',
+          borderWidth: 2,
         },
-      },
-    ],
-  };
-
-  // Dual panel: point structure + small history
-  const histOption = {
-    color: ['#B91C1C', '#1D4ED8', '#0F766E'],
-    tooltip: { trigger: 'axis' },
-    legend: {
-      data: ['VIX9D', 'VIX', 'VIX3M'],
-      top: 0,
-      textStyle: { fontSize: 10 },
-    },
-    grid: { left: 36, right: 12, top: 28, bottom: 24 },
-    xAxis: {
-      type: 'category',
-      data: series.map((p) => p.date.slice(5)),
-      axisLabel: { fontSize: 9 },
-    },
-    yAxis: {
-      type: 'value',
-      splitLine: { lineStyle: { color: '#E8EDF4' } },
-      axisLabel: { fontSize: 9 },
-    },
-    series: [
-      {
-        name: 'VIX9D',
-        type: 'line',
-        data: series.map((p) => p.vix9d),
-        showSymbol: false,
+        areaStyle: { color: 'rgba(220, 38, 38, 0.08)' },
+        z: 3,
       },
       {
-        name: 'VIX',
+        name: `Vanna 触发阈值 (${threshold.toFixed(1)})`,
         type: 'line',
-        data: series.map((p) => p.vix),
-        showSymbol: false,
-      },
-      {
-        name: 'VIX3M',
-        type: 'line',
-        data: series.map((p) => p.vix3m),
-        showSymbol: false,
+        data: [threshold, threshold, threshold],
+        symbol: 'none',
+        lineStyle: { width: 1.5, type: 'dashed', color: '#94A3B8' },
+        itemStyle: { color: '#94A3B8' },
+        silent: true,
+        z: 1,
       },
     ],
   };
@@ -111,21 +103,53 @@ export function VolTermStructure({ snap, series, asOf, vixTrigger }: Props) {
   return (
     <div className="panel flex h-full flex-col p-3">
       <div className="mb-1 flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-navy">波动率期限结构</h3>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-navy">
+            波动率期限结构曲线
+          </h3>
           <p className="text-[10px] text-navy-soft">
-            VIX9D / VIX / VIX3M · 单位：指数点 ·{' '}
-            <span className="text-warn">情景模拟</span>
+            VIX9D / VIX 30D / VXV 3M 实时推算（虚线为 {threshold.toFixed(1)}{' '}
+            Vanna 阈值）
           </p>
         </div>
-        <span className="text-[10px] text-navy-soft">{formatAsOf(asOf)}</span>
+        <span
+          className={`shrink-0 rounded px-2 py-0.5 text-[11px] font-semibold ${
+            backwardation
+              ? 'bg-red-50 text-danger'
+              : 'bg-emerald-50 text-ok'
+          }`}
+        >
+          {backwardation ? 'Backwardation 倒挂' : 'Contango 升水'}
+        </span>
       </div>
-      <ReactECharts option={option} style={{ height: 160 }} opts={{ renderer: 'svg' }} />
+
       <ReactECharts
-        option={histOption}
-        style={{ height: 120 }}
+        option={option}
+        style={{ height: 220 }}
         opts={{ renderer: 'svg' }}
+        notMerge
       />
+
+      <div className="mt-2 grid grid-cols-3 gap-2 border-t border-line pt-2 text-center">
+        <div>
+          <p className="text-[10px] text-navy-soft">VIX9D（推算）</p>
+          <p className="font-mono text-base font-semibold text-navy">
+            {formatNum(vix9d, 1)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] text-navy-soft">VIX（30D基准）</p>
+          <p className="font-mono text-base font-semibold text-navy">
+            {formatNum(vix, 1)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] text-navy-soft">VXV（3M推算）</p>
+          <p className="font-mono text-base font-semibold text-navy">
+            {formatNum(vxv, 1)}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
